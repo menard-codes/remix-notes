@@ -20,6 +20,8 @@ In the future (that is, after the core features are implemented, I'm looking for
 
 I also intend to add Storybook and testing, like Jest in the future.
 
+Then, use Amazon Cognito for Auth. Replace the custom built I made.
+
 ## Tech Stack
 
 - **Remix** - The fullstack framework and foundation of this whole project
