@@ -1,36 +1,40 @@
-# Welcome to Remix!
+# Remix Notes App
 
-- 📖 [Remix docs](https://remix.run/docs)
+In this project, I will build a notes app in Remix to learn it first hand.
 
-## Development
+I have a limited understanding of this so it's my goal to learn it along the way and have a good grasp of the framework by the end of this project
 
-Run the dev server:
+I also want to learn some related areas that I'm currently learning such as databases, authentication/authorization, etc.
 
-```shellscript
-npm run dev
-```
+## Description
 
-## Deployment
+The notes app is a note taking app that allows users to add a note, view their notes, edit a note, and delete a note.
 
-First, build your app for production:
+Users can create an account (via email/password, or Sign in with 3rd party providers such as Google, Facebook, etc.).
 
-```sh
-npm run build
-```
+### Future improvements
 
-Then run the app in production mode:
+In the future (that is, after the core features are implemented, I'm looking forward to implement a Kanban board to allow classifications of notes).
 
-```sh
-npm start
-```
+#### Tech and development related
 
-Now you'll need to pick a host to deploy it to.
+I also intend to add Storybook and testing, like Jest in the future.
 
-### DIY
+## Tech Stack
 
-If you're familiar with deploying Node applications, the built-in Remix app server is production-ready.
+- **Remix** - The fullstack framework and foundation of this whole project
+- **MySQL** - Database
+- **Shadcn** - Components library
+- **TailwindCSS** - CSS
 
-Make sure to deploy the output of `npm run build`
+## TODO
 
-- `build/server`
-- `build/client`
+### Planning
+
+- [ ] Database Design
+- [ ] API Design
+- [ ] UI Architecture
+
+### Development
+
+*TBD*
