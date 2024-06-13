@@ -2,6 +2,16 @@ import type { MetaFunction } from "@remix-run/node";
 import { Form } from "@remix-run/react";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter
+} from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
 import type { Note } from "~/models/note.model";
 
 export const meta: MetaFunction = () => {
@@ -42,12 +52,12 @@ export default function Index() {
   ];
 
   return (
-    <div>
+    <div className="max-w-[1100px] mx-auto">
       <h1 className=" text-center text-4xl font-semibold my-8">Notes App</h1>
-      <ul className=" list-none">
+      <ul className=" list-none grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-4 justify-items-center">
         {
           notes.map(note => (
-            <li key={note.id}>
+            <li key={note.id} className="block w-fit">
               <Note id={note.id} title={note.title} body={note.body} />
             </li>
           ))
@@ -61,44 +71,58 @@ function Note({ id, title, body }: Omit<Note, "note_author">) {
   const [onEdit, setOnEdit] = useState(false);
 
   return (
-    <div className=" border-0 border-solid border-slate-700 rounded">
+    <Card className="w-[350px]">
       {
         onEdit
           ? (
             <>
-              <Form>
-                <div>
-                  <label htmlFor={`note-${id}-title`}>Title</label>
-                  <input
-                    placeholder="Title"
-                    value={title}
-                    id={`note-${id}-title`}
-                    name="title"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    name="body"
-                    id={`id-${id}-body`}
-                    placeholder="Note body"
-                    value={body}
-                  ></textarea>
-                </div>
-                <Button type="button" variant="outline" onClick={() => setOnEdit(false)}>Cancel</Button>
-                <Button type="submit">Save</Button>
-              </Form>
+              <CardHeader>
+                <CardTitle>Edit Note</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form>
+                  <div>
+                    <Label htmlFor={`note-${id}-title`}>Title</Label>
+                    <Input
+                      placeholder="Title"
+                      defaultValue={title}
+                      id={`note-${id}-title`}
+                      name="title"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`id-${id}-body`}>Note</Label>
+                    <Textarea
+                      name="body"
+                      id={`id-${id}-body`}
+                      placeholder="Note body"
+                      defaultValue={body}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <Button type="button" variant="outline" onClick={() => setOnEdit(false)}>Cancel</Button>
+                    <Button type="submit">Save</Button>
+                  </div>
+                </Form>
+              </CardContent>
             </>
           )
           : (
             <>
-              <p>{title}</p>
-              <p>{body}</p>
-              <Button onClick={() => setOnEdit(true)}>
-                Edit
-              </Button>
+              <CardHeader>
+                <CardTitle>{title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {body}
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => setOnEdit(true)}>
+                  Edit
+                </Button>
+              </CardFooter>
             </>
           )
       }
-    </div>
+    </Card>
   )
 }
