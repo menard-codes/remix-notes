@@ -52,7 +52,7 @@ export default function Index() {
   ];
 
   return (
-    <div className="max-w-[1100px] mx-auto">
+    <div>
       <h1 className=" text-center text-4xl font-semibold my-8">Notes App</h1>
       <ul className=" list-none grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-4 justify-items-center">
         {
@@ -71,7 +71,7 @@ function Note({ id, title, body }: Omit<Note, "note_author">) {
   const [onEdit, setOnEdit] = useState(false);
 
   return (
-    <Card className="w-[350px]">
+    <Card className="w-[350px] h-full">
       {
         onEdit
           ? (
