@@ -40,7 +40,7 @@ export default function Login() {
                             <PasswordInput
                                 id="delete"
                                 name="password"
-                                placeholder="Enter password"
+                                placeholder="Enter your password"
                                 required={true}
                             />
 
