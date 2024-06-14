@@ -1,11 +1,11 @@
-import { Form, type MetaFunction } from "@remix-run/react";
-import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import type { MetaFunction } from "@remix-run/node";
+import { Form } from "@remix-run/react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import PasswordInput from "~/components/PasswordInput";
 
 export const meta: MetaFunction = () => {
   return [
@@ -15,9 +15,6 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Login() {
-    const [seePassword, setSeePassword] = useState(false);
-
-    console.log(seePassword)
 
     return (
         <div>
@@ -35,29 +32,17 @@ export default function Login() {
                                 id="username"
                                 name="username"
                                 placeholder="Enter your username"
+                                required
                             />
                         </div>
                         <div>
                             <Label htmlFor="password">Password</Label>
-                            <div className=" relative">
-                                <Input
-                                    id="password"
-                                    name="password"
-                                    placeholder="Enter your password"
-                                    type={seePassword ? "text" : "password"}
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute right-3 top-2/4 translate-y-[-50%]"
-                                    onClick={() => setSeePassword(!seePassword)}
-                                >
-                                    {
-                                        seePassword
-                                            ? <Eye />
-                                            : <EyeOff />
-                                    }
-                                </button>
-                            </div>
+                            <PasswordInput
+                                id="delete"
+                                name="password"
+                                placeholder="Enter password"
+                                required={true}
+                            />
 
                             <a href="/reset-password" className="block w-fit mt-2 text-sky-600 hover:underline underline-offset-2">Forgot your password?</a>
                         </div>
