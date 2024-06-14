@@ -1,7 +1,7 @@
 import type { MetaFunction } from "@remix-run/node";
-import { Form } from "@remix-run/react";
+import { Form, Link } from "@remix-run/react";
 import PasswordInput from "~/components/PasswordInput";
-import { Button } from "~/components/ui/button";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -33,6 +33,7 @@ export default function Signup() {
                                 id="email"
                                 name="email"
                                 type="email"
+                                placeholder="Enter Email"
                                 required
                             />
                         </div>
@@ -41,6 +42,7 @@ export default function Signup() {
                             <Input
                                 id="username"
                                 name="username"
+                                placeholder="Enter Username"
                                 required
                             />
                         </div>
@@ -63,8 +65,15 @@ export default function Signup() {
                             />
                         </div>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="grid">
                         <Button className="w-full">Sign Up</Button>
+
+                        <div className="relative my-6">
+                            <hr className="absolute top-2/4 w-full" />
+                            <p className="absolute top-2/4 translate-y-[-50%] left-0 right-0 m-auto w-fit bg-white px-2">or</p>
+                        </div>
+
+                        <Link to="/login" className={buttonVariants({ variant: "secondary" })}>Log In Instead</Link>
                     </CardFooter>
                 </Card>
             </Form>
