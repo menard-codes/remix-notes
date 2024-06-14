@@ -29,25 +29,25 @@ export default function Index() {
       id: 1,
       title: 'To study',
       body: 'gotto study fullstack dev',
-      note_author: 1000
+      authorId: 1000
     },
     {
       id: 2,
       title: 'Goal',
       body: 'To build a Shopify App as a side business',
-      note_author: 1000
+      authorId: 1000
     },
     {
       id: 3,
       title: 'AWS',
       body: 'Cloud is an essential skill that can boost my resume as a fullstack dev',
-      note_author: 1000
+      authorId: 1000
     },
     {
       id: 4,
       title: 'Taxes',
       body: 'gotta learn about personal finance, including taxes',
-      note_author: 1000
+      authorId: 1000
     },
   ];
 
@@ -67,7 +67,7 @@ export default function Index() {
   );
 }
 
-function Note({ id, title, body }: Omit<Note, "note_author">) {
+function Note({ id, title, body }: Omit<Note, "authorId">) {
   const [onEdit, setOnEdit] = useState(false);
 
   return (
