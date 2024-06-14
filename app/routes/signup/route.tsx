@@ -1,26 +1,69 @@
-import type { MetaFunction } from "@remix-run/node";
+import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
 import { Form, Link } from "@remix-run/react";
 import PasswordInput from "~/components/PasswordInput";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import bcrypt from "bcryptjs";
+import { db } from "~/db/db.server";
 
 export const meta: MetaFunction = () => [
     { title: "Sign Up" },
     { name: "description", content: "Sign up to create an account for the Remix Notes App" }
 ]
 
+export async function action({ request }: ActionFunctionArgs) {
+    const formData = await request.formData();
+    const requiredValues = ["email", "username", "password", "confirm-password"];
+    const hasAllRequired = requiredValues.every(required => Array.from(formData.keys()).includes(required))
+    if (!hasAllRequired) {
+        // TODO: handle this route guard later
+        console.log('This should be an error')
+        return null;
+    }
+
+    try {
+        const formObject = Object.fromEntries(formData);
+        const user = await db.user.findFirst({ where: { OR: [
+            { username: formObject.username as string },
+            { email: formObject.email as string }
+        ] } });
+        if (user !== null) {
+            // TODO: Handle proper error for existing user
+            console.log('user already exists')
+            return null;
+        }
+        const hashedPassword = await bcrypt.hash(formObject.password as string, 10);
+        const newUser = await db.user.create({ data: {
+                email: formObject.email as string,
+                username: formObject.username as string,
+                hashedPassword,
+        }});
+        console.log('created new user', newUser);
+    } catch (error) {
+        // TODO: handle this error
+        console.log('got an error...');
+        console.error(error);
+        return null;
+    }
+
+    return null;
+}
+
 export default function Signup() {
     return (
         <div>
             <h1 className=" text-center text-4xl font-semibold my-8">Sign Up</h1>
-            <Form onSubmit={e => {
-                const form = new FormData(e.currentTarget);
-                if (form.get("password") !== form.get("confirm-password")) {
-                    e.preventDefault();
-                }
-            }}>
+            <Form
+                method="POST"
+                onSubmit={e => {
+                    const form = new FormData(e.currentTarget);
+                    if (form.get("password") !== form.get("confirm-password")) {
+                        e.preventDefault();
+                    }
+                }}
+            >
                 <Card className=" max-w-[720px] mx-auto">
                     <CardHeader>
                         <CardTitle>Remix Notes</CardTitle>
