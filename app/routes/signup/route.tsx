@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { Form, Link, redirect } from "@remix-run/react";
-import PasswordInput from "~/components/PasswordInput";
+import PasswordInput from "~/components/utils/PasswordInput";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "~/components/ui/label";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { db } from "~/db/db.server";
-import { commitSession, getSession } from "~/sessions";
+import { getSession } from "~/sessions";
 
 import dotenv from "dotenv";
 
