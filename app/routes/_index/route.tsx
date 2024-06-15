@@ -7,6 +7,11 @@ import NoteItem from "./NoteItem";
 import dotenv from "dotenv";
 import { db } from "~/db/db.server";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { FilePlus2, LogOut, PackageOpen } from "lucide-react";
+import { Textarea } from "~/components/ui/textarea";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "~/components/ui/alert-dialog";
 
 
 export const meta: MetaFunction = () => {
@@ -99,30 +104,96 @@ export default function Index() {
   const user = useLoaderData<typeof loader>();
 
   return (
-    <div className="p-2 max-w-[1100px] mx-auto">
+    <div className="p-2 pb-8 max-w-[1100px] mx-auto">
       
-      <div className="flex justify-between my-8">
-        <div>
+      <div className="mt-4">
+        <div className="w-fit ml-auto">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <LogOut className="mr-2" />
+                Logout
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className=" w-11/12">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Log out</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to logout?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Form method="POST" action="/logout">
+                  <AlertDialogAction type="submit" className="bg-red-600 w-full">
+                    Yes, Logout
+                  </AlertDialogAction>
+                </Form>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+        <div className="w-fit mx-auto text-center">
           <h1 className="text-4xl font-semibold">Notes App</h1>
           <p>Logged in as: <span className="font-semibold italic">{user?.username}</span></p>
         </div>
-        <Form method="POST" action="/logout">
-          <Button type="submit" variant="destructive">Logout</Button>
+      </div>
+
+      <div className="mt-14 max-w-3xl mx-auto">
+        <Form method="POST">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add new note</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-4">
+                  <Input
+                    placeholder="Note title..."
+                    id="new-note-title"
+                    name="new-note-title"
+                    required
+                  />
+                  <Textarea
+                    placeholder="Note..."
+                    name="new-note-body"
+                    id="new-note-body"
+                  />
+                </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full">
+                <FilePlus2 className="mr-4" /> Add New Note
+              </Button>
+            </CardFooter>
+          </Card>
         </Form>
       </div>
 
+      <hr className="my-8 border-2 border-slate-400 border-dashed" />
+
+      <h2 className=" text-2xl text-center font-semibold mb-4">Notes List</h2>
       <ul className=" list-none grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-4 justify-items-center">
         {
-          notes.map(note => (
-            <li key={note.id} className="block w-fit">
-              <NoteItem
-                id={note.id}
-                title={note.title}
-                body={note.body}
-                createdAt={note.createdAt}
-              />
-            </li>
-          ))
+          notes.length > 0
+            ? (
+              notes.map(note => (
+                <li key={note.id} className="block w-fit">
+                  <NoteItem
+                    id={note.id}
+                    title={note.title}
+                    body={note.body}
+                    createdAt={note.createdAt}
+                  />
+                </li>
+              ))
+            ) : (
+              <div
+                className="grid place-content-center place-items-center p-24"
+              >
+                <PackageOpen size="2.5rem" className="mb-4" />
+                <span className="text-center text-xl italic">It&#39;s empty here</span>
+              </div>
+            )
         }
       </ul>
     </div>
