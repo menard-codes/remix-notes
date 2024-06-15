@@ -8,10 +8,26 @@ import dotenv from "dotenv";
 import { db } from "~/db/db.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { FilePlus2, LogOut, PackageOpen } from "lucide-react";
+import { FilePlus2, LogOut, NotebookPen, NotepadText, PackageOpen } from "lucide-react";
 import { Textarea } from "~/components/ui/textarea";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "~/components/ui/alert-dialog";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "~/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "~/components/ui/alert-dialog";
 
 
 export const meta: MetaFunction = () => {
@@ -107,7 +123,7 @@ export default function Index() {
     <div className="p-2 pb-8 max-w-[1100px] mx-auto">
       
       <div className="mt-4">
-        <div className="w-fit ml-auto">
+        <div className="w-fit ml-auto mb-4">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
@@ -134,8 +150,11 @@ export default function Index() {
           </AlertDialog>
         </div>
         <div className="w-fit mx-auto text-center">
-          <h1 className="text-4xl font-semibold">Notes App</h1>
-          <p>Logged in as: <span className="font-semibold italic">{user?.username}</span></p>
+          <h1 className="text-4xl font-semibold flex items-center gap-2 mb-2 select-none">
+            <NotebookPen size="2rem" />
+            Notes App
+          </h1>
+          <p className="px-2 bg-amber-100 rounded-md">Notes by: <span className="font-semibold italic underline decoration-2 text-orange-400">@{user?.username}</span></p>
         </div>
       </div>
 
@@ -171,7 +190,10 @@ export default function Index() {
 
       <hr className="my-8 border-2 border-slate-400 border-dashed" />
 
-      <h2 className=" text-2xl text-center font-semibold mb-4">Notes List</h2>
+      <h2 className="flex justify-center items-center gap-1 text-2xl text-center font-semibold mb-4">
+        <NotepadText />
+        My Notes
+      </h2>
       <ul className=" list-none grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-4 justify-items-center">
         {
           notes.length > 0

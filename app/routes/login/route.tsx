@@ -25,7 +25,7 @@ export async function action({ request }: ActionFunctionArgs) {
     dotenv.config();
 
     const formData = await request.formData();
-    const requiredFields = ["username", "password"];
+    const requiredFields = ["username-or-email", "password"];
     const hasAllRequired = requiredFields.every(required => Array.from(formData.keys()).includes(required));
     if (!hasAllRequired) {
         // TODO: handle this route guard later
@@ -34,9 +34,14 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     try {
-        const username = formData.get("username") as string;
+        const usernameOrEmail = formData.get("username-or-email") as string;
         const password = formData.get("password") as string;
-        const user = await db.users.findFirst({ where: { username } });
+        const user = await db.users.findFirst({ where: {
+            OR: [
+                { username: usernameOrEmail },
+                { email: usernameOrEmail }
+            ]
+        } });
         if (!user) {
             // TODO: This should be an error. handle later;
             console.log('user doesn\'t exist. check the login credentials or create an account', username, password);
@@ -133,11 +138,11 @@ export default function Login() {
                     </CardHeader>
                     <CardContent>
                         <div>
-                            <Label htmlFor="username">Username</Label>
+                            <Label htmlFor="username-or-email">Username or Email</Label>
                             <Input
-                                id="username"
-                                name="username"
-                                placeholder="Enter your username"
+                                id="username-or-email"
+                                name="username-or-email"
+                                placeholder="Enter your username or email"
                                 required
                             />
                         </div>
