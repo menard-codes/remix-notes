@@ -1,9 +1,19 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form, redirect } from "@remix-run/react";
+import { Form, json, Link, redirect, useLoaderData } from "@remix-run/react";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "~/components/ui/alert-dialog";
-import { Button } from "~/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "~/components/ui/alert-dialog";
+import { Button, buttonVariants } from "~/components/ui/button";
 import {
   Card,
   CardHeader,
@@ -56,14 +66,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
           return null;
       }
       // check if the user with that id exists
-      const user = await db.users.findFirst({ where: { id: decoded.userId } });
+      const user = await db.users.findFirst({ where: { id: decoded.userId }, select: { username: true } });
       if (!user) {
           // TODO: This should be an error
           console.log(`user with id ${decoded.userId} does not exist`);
           return null;
       }
       // if all tests passed, just return null
-      return null;
+      return json(user);
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       return redirect("/login");
@@ -108,10 +118,19 @@ export default function Index() {
       createdAt: new Date()
     },
   ];
+  const user = useLoaderData<typeof loader>();
 
   return (
-    <div>
-      <h1 className=" text-center text-4xl font-semibold my-8">Notes App</h1>
+    <div className="p-2">
+      
+      <div className="flex justify-between my-8">
+        <div>
+          <h1 className="text-4xl font-semibold">Notes App</h1>
+          <p>Logged in as: <span className="font-semibold italic">{user?.username}</span></p>
+        </div>
+        <Link to="/logout" className={buttonVariants({ variant: "destructive" })}>Logout</Link>
+      </div>
+
       <ul className=" list-none grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-4 justify-items-center">
         {
           notes.map(note => (

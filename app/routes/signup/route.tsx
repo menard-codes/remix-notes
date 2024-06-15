@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { Form, Link, redirect } from "@remix-run/react";
 import PasswordInput from "~/components/PasswordInput";
 import { Button, buttonVariants } from "~/components/ui/button";
@@ -17,7 +17,53 @@ export const meta: MetaFunction = () => [
     { name: "description", content: "Sign up to create an account for the Remix Notes App" }
 ]
 
-// TODO: Loader function to check if user is already logged in
+export async function loader({ request }: LoaderFunctionArgs) {
+    dotenv.config();
+
+    const session = await getSession(request.headers.get("Cookie"));
+    
+    // check if jwt is already in the cookie and check if it is valid
+    if (session.has("jwt")) {
+
+        // ----
+        // validate jwt
+        const token = session.get("jwt") as string;
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) {
+            // TODO: this should be an error
+            console.log('Error: jwtSecret cannot be retrieved from env');
+            return null;
+        }
+        try {
+            const decoded = jwt.verify(token, jwtSecret);
+            if (typeof decoded === "string") {
+                // TODO: this should be an error
+                console.log('invalid or expired token');
+                return null;
+            }
+            // check if the user with that id exists
+            const user = await db.users.findFirst({ where: { id: decoded.userId } });
+            if (!user) {
+                // TODO: This should be an error
+                console.log(`user with id ${decoded.userId} does not exist`);
+                return null;
+            }
+            // if all tests passed, redirect to homepage
+            return redirect("/");
+            // -----
+        } catch (error) {
+            if (error instanceof jwt.TokenExpiredError) {
+                return null;
+            }
+
+            console.log('error....');
+            console.error(error);
+            return null;
+        }
+    }
+
+    return null;
+}
 
 export async function action({ request }: ActionFunctionArgs) {
     dotenv.config();
