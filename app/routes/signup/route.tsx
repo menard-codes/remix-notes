@@ -1,12 +1,17 @@
 import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form, Link } from "@remix-run/react";
+import { Form, Link, redirect } from "@remix-run/react";
 import PasswordInput from "~/components/PasswordInput";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { db } from "~/db/db.server";
+import { commitSession, getSession } from "~/sessions";
+
+import dotenv from "dotenv";
+dotenv.config();
 
 export const meta: MetaFunction = () => [
     { title: "Sign Up" },
@@ -40,7 +45,23 @@ export async function action({ request }: ActionFunctionArgs) {
                 username: formObject.username as string,
                 hashedPassword,
         }});
-        console.log('created new user', newUser);
+        
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) {
+            // TODO: Handle this error
+            console.log('Cannot load the jwtSecret from env');
+            return null;
+        }
+        const token = jwt.sign({ userId: newUser.id }, jwtSecret, {
+            expiresIn: '1h'
+        });
+        const session = await getSession(request.headers.get("Cookie"));
+        session.set("jwt", token);
+        return redirect("/login", {
+            headers: {
+                "Set-Cookie": await commitSession(session)
+            }
+        })
     } catch (error) {
         // TODO: handle this error
         console.log('got an error...');
