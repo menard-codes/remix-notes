@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form, json, Link, redirect, useLoaderData } from "@remix-run/react";
+import { Form, json, redirect, useLoaderData } from "@remix-run/react";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "~/components/ui/alert-dialog";
-import { Button, buttonVariants } from "~/components/ui/button";
+import { Button } from "~/components/ui/button";
 import {
   Card,
   CardHeader,
@@ -128,7 +128,9 @@ export default function Index() {
           <h1 className="text-4xl font-semibold">Notes App</h1>
           <p>Logged in as: <span className="font-semibold italic">{user?.username}</span></p>
         </div>
-        <Link to="/logout" className={buttonVariants({ variant: "destructive" })}>Logout</Link>
+        <Form method="POST" action="/logout">
+          <Button type="submit" variant="destructive">Logout</Button>
+        </Form>
       </div>
 
       <ul className=" list-none grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-4 justify-items-center">
