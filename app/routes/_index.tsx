@@ -121,7 +121,7 @@ export default function Index() {
   const user = useLoaderData<typeof loader>();
 
   return (
-    <div className="p-2">
+    <div className="p-2 max-w-[1100px] mx-auto">
       
       <div className="flex justify-between my-8">
         <div>
