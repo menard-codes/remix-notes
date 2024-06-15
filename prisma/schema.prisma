@@ -13,20 +13,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id             Int       @id @default(autoincrement())
-  email          String    @unique
-  username       String    @unique
+model Users {
+  id             Int     @id @default(autoincrement())
+  email          String  @unique
+  username       String  @unique
   hashedPassword String
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime?
   notes          Notes[]
 }
 
 model Notes {
-  id       Int     @id @default(autoincrement())
-  title    String
-  body     String?
-  author   User    @relation(fields: [authorId], references: [id])
-  authorId Int
+  id        Int       @id @default(autoincrement())
+  title     String
+  body      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  author    Users     @relation(fields: [authorId], references: [id])
+  authorId  Int
 }

@@ -25,7 +25,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     try {
         const formObject = Object.fromEntries(formData);
-        const user = await db.user.findFirst({ where: { OR: [
+        const user = await db.users.findFirst({ where: { OR: [
             { username: formObject.username as string },
             { email: formObject.email as string }
         ] } });
@@ -35,7 +35,7 @@ export async function action({ request }: ActionFunctionArgs) {
             return null;
         }
         const hashedPassword = await bcrypt.hash(formObject.password as string, 10);
-        const newUser = await db.user.create({ data: {
+        const newUser = await db.users.create({ data: {
                 email: formObject.email as string,
                 username: formObject.username as string,
                 hashedPassword,

@@ -4,6 +4,4 @@ export interface User {
     email: string;
     username: string;
     hashedPassword: string;
-    createdAt: Date;
-    updatedAt: Date | undefined;
 }

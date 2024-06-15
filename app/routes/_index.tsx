@@ -1,6 +1,8 @@
 import type { MetaFunction } from "@remix-run/node";
 import { Form } from "@remix-run/react";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "~/components/ui/alert-dialog";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -28,26 +30,30 @@ export default function Index() {
     {
       id: 1,
       title: 'To study',
-      body: 'gotto study fullstack dev',
-      authorId: 1000
+      body: 'gotta study fullstack dev',
+      authorId: 1000,
+      createdAt: new Date()
     },
     {
       id: 2,
       title: 'Goal',
       body: 'To build a Shopify App as a side business',
-      authorId: 1000
+      authorId: 1000,
+      createdAt: new Date()
     },
     {
       id: 3,
       title: 'AWS',
       body: 'Cloud is an essential skill that can boost my resume as a fullstack dev',
-      authorId: 1000
+      authorId: 1000,
+      createdAt: new Date()
     },
     {
       id: 4,
       title: 'Taxes',
       body: 'gotta learn about personal finance, including taxes',
-      authorId: 1000
+      authorId: 1000,
+      createdAt: new Date()
     },
   ];
 
@@ -58,7 +64,12 @@ export default function Index() {
         {
           notes.map(note => (
             <li key={note.id} className="block w-fit">
-              <Note id={note.id} title={note.title} body={note.body} />
+              <Note
+                id={note.id}
+                title={note.title}
+                body={note.body}
+                createdAt={note.createdAt}
+              />
             </li>
           ))
         }
@@ -67,7 +78,7 @@ export default function Index() {
   );
 }
 
-function Note({ id, title, body }: Omit<Note, "authorId">) {
+function Note({ id, title, body, createdAt, updatedAt }: Omit<Note, "authorId">) {
   const [onEdit, setOnEdit] = useState(false);
 
   return (
@@ -96,7 +107,7 @@ function Note({ id, title, body }: Omit<Note, "authorId">) {
                       name="body"
                       id={`id-${id}-body`}
                       placeholder="Note body"
-                      defaultValue={body}
+                      defaultValue={body || ''}
                     />
                   </div>
                   <div className="flex justify-between mt-2">
@@ -109,11 +120,43 @@ function Note({ id, title, body }: Omit<Note, "authorId">) {
           )
           : (
             <>
-              <CardHeader>
+              <CardHeader className="flex flex-row justify-between">
                 <CardTitle>{title}</CardTitle>
+
+                {/* delete button and alert context */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button aria-label={`delete note: ${title}`}>
+                      <Trash2 color="hsl(0 84 60)" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete <strong>{title}</strong> note</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this note?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction className=" bg-red-600">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
               </CardHeader>
               <CardContent>
                 {body}
+                <em className="block mt-4 text-xs text-gray-500">
+                  Created at: {createdAt.toLocaleDateString()}
+                </em>
+                {
+                  updatedAt && (
+                    <em className="block text-xs text-gray-500">
+                      Updated at: {updatedAt.toLocaleDateString()}
+                    </em>
+                  )
+                }
               </CardContent>
               <CardFooter>
                 <Button onClick={() => setOnEdit(true)}>
