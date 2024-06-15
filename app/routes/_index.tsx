@@ -1,5 +1,5 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Form } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { Form, redirect } from "@remix-run/react";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "~/components/ui/alert-dialog";
@@ -15,6 +15,11 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import type { Note } from "~/models/note.model";
+import { getSession } from "~/sessions";
+import jwt from "jsonwebtoken";
+
+import dotenv from "dotenv";
+import { db } from "~/db/db.server";
 
 export const meta: MetaFunction = () => {
   return [
@@ -23,6 +28,53 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+export async function loader({ request }: LoaderFunctionArgs) {
+  dotenv.config();
+  
+  const session = await getSession(request.headers.get("Cookie"));
+  
+  // check if jwt is already in the cookie and check if it is valid
+  // ----
+  // validate jwt
+  const token = session.get("jwt") as string;
+
+  if (!token) {
+    return redirect("/login");
+  }
+
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+      // TODO: this should be an error
+      console.log('Error: jwtSecret cannot be retrieved from env');
+      return null;
+  }
+  try {
+      const decoded = jwt.verify(token, jwtSecret);
+      if (typeof decoded === "string") {
+          // TODO: this should be an error
+          console.log('invalid or expired token', decoded);
+          return null;
+      }
+      // check if the user with that id exists
+      const user = await db.users.findFirst({ where: { id: decoded.userId } });
+      if (!user) {
+          // TODO: This should be an error
+          console.log(`user with id ${decoded.userId} does not exist`);
+          return null;
+      }
+      // if all tests passed, just return null
+      return null;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return redirect("/login");
+    }
+
+    console.log('error....');
+    console.error(error);
+    return null;
+  }
+
+}
 
 export default function Index() {
   // NOTE: Dummy data, remove later
@@ -91,7 +143,7 @@ function Note({ id, title, body, createdAt, updatedAt }: Omit<Note, "authorId">)
                 <CardTitle>Edit Note</CardTitle>
               </CardHeader>
               <CardContent>
-                <Form>
+                <Form method="POST">
                   <div>
                     <Label htmlFor={`note-${id}-title`}>Title</Label>
                     <Input

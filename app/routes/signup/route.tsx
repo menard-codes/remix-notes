@@ -11,17 +11,20 @@ import { db } from "~/db/db.server";
 import { commitSession, getSession } from "~/sessions";
 
 import dotenv from "dotenv";
-dotenv.config();
 
 export const meta: MetaFunction = () => [
     { title: "Sign Up" },
     { name: "description", content: "Sign up to create an account for the Remix Notes App" }
 ]
 
+// TODO: Loader function to check if user is already logged in
+
 export async function action({ request }: ActionFunctionArgs) {
+    dotenv.config();
+
     const formData = await request.formData();
-    const requiredValues = ["email", "username", "password", "confirm-password"];
-    const hasAllRequired = requiredValues.every(required => Array.from(formData.keys()).includes(required))
+    const requiredFields = ["email", "username", "password", "confirm-password"];
+    const hasAllRequired = requiredFields.every(required => Array.from(formData.keys()).includes(required))
     if (!hasAllRequired) {
         // TODO: handle this route guard later
         console.log('This should be an error')
@@ -40,36 +43,19 @@ export async function action({ request }: ActionFunctionArgs) {
             return null;
         }
         const hashedPassword = await bcrypt.hash(formObject.password as string, 10);
-        const newUser = await db.users.create({ data: {
+        await db.users.create({ data: {
                 email: formObject.email as string,
                 username: formObject.username as string,
                 hashedPassword,
         }});
         
-        const jwtSecret = process.env.JWT_SECRET;
-        if (!jwtSecret) {
-            // TODO: Handle this error
-            console.log('Cannot load the jwtSecret from env');
-            return null;
-        }
-        const token = jwt.sign({ userId: newUser.id }, jwtSecret, {
-            expiresIn: '1h'
-        });
-        const session = await getSession(request.headers.get("Cookie"));
-        session.set("jwt", token);
-        return redirect("/login", {
-            headers: {
-                "Set-Cookie": await commitSession(session)
-            }
-        })
+        return redirect("/login")
     } catch (error) {
         // TODO: handle this error
         console.log('got an error...');
         console.error(error);
         return null;
     }
-
-    return null;
 }
 
 export default function Signup() {
