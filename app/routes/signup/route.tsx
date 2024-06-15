@@ -11,6 +11,7 @@ import { db } from "~/db/db.server";
 import { getSession } from "~/sessions";
 
 import dotenv from "dotenv";
+import { ClipboardPen, KeyRound } from "lucide-react";
 
 export const meta: MetaFunction = () => [
     { title: "Sign Up" },
@@ -162,14 +163,20 @@ export default function Signup() {
                         </div>
                     </CardContent>
                     <CardFooter className="grid">
-                        <Button className="w-full">Sign Up</Button>
+                        <Button className="w-full">
+                            <ClipboardPen size="1.2rem" className="mr-2" />
+                            Sign Up
+                        </Button>
 
                         <div className="relative my-6">
                             <hr className="absolute top-2/4 w-full" />
                             <p className="absolute top-2/4 translate-y-[-50%] left-0 right-0 m-auto w-fit bg-white px-2">or</p>
                         </div>
 
-                        <Link to="/login" className={buttonVariants({ variant: "secondary" })}>Log In Instead</Link>
+                        <Link to="/login" className={buttonVariants({ variant: "secondary" })}>
+                            <KeyRound className="mr-2" size="1.2rem" />
+                            Log In Instead
+                        </Link>
                     </CardFooter>
                 </Card>
             </Form>

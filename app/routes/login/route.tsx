@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 
 import dotenv from "dotenv";
 import { db } from "~/db/db.server";
+import { ClipboardPen, KeyRound } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -162,14 +163,20 @@ export default function Login() {
                         </div>
                     </CardContent>
                     <CardFooter className="grid">
-                        <Button className="w-full">Login</Button>
+                        <Button className="w-full">
+                            <KeyRound className="mr-2" size="1.2rem" />
+                            Login
+                        </Button>
 
                         <div className="relative my-6">
                             <hr className="absolute top-2/4 w-full" />
                             <p className="absolute top-2/4 translate-y-[-50%] left-0 right-0 m-auto w-fit bg-white px-2">or</p>
                         </div>
 
-                        <Link to="/signup" className={buttonVariants({ variant: "secondary" })}>Sign Up Instead</Link>
+                        <Link to="/signup" className={buttonVariants({ variant: "secondary" })}>
+                            <ClipboardPen size="1.2rem" className="mr-2" />
+                            Sign Up Instead
+                        </Link>
                     </CardFooter>
                 </Card>
             </Form>
