@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form, Link, redirect } from "@remix-run/react";
+import { Form, Link, redirect, useNavigation } from "@remix-run/react";
 import PasswordInput from "~/components/utils/PasswordInput";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
@@ -9,9 +9,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { db } from "~/db/db.server";
 import { getSession } from "~/sessions";
-
 import dotenv from "dotenv";
-import { ClipboardPen, KeyRound } from "lucide-react";
+import { ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
 
 export const meta: MetaFunction = () => [
     { title: "Sign Up" },
@@ -106,6 +105,8 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Signup() {
+    const nav = useNavigation();
+
     return (
         <div>
             <h1 className=" text-center text-4xl font-semibold my-8">Sign Up</h1>
@@ -163,9 +164,17 @@ export default function Signup() {
                         </div>
                     </CardContent>
                     <CardFooter className="grid">
-                        <Button className="w-full">
-                            <ClipboardPen size="1.2rem" className="mr-2" />
-                            Sign Up
+                        <Button className="w-full" disabled={nav.state === "loading" || nav.state === "submitting"}>
+                            {
+                                (nav.state === "submitting" || nav.state === "loading") && nav.formAction === "/signup"
+                                    ? <LoaderCircle className="animate-spin" />
+                                    : (
+                                        <>
+                                            <ClipboardPen size="1.2rem" className="mr-2" />
+                                            Sign Up
+                                        </>
+                                    )
+                            }
                         </Button>
 
                         <div className="relative my-6">

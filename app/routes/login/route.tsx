@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form, Link, redirect } from "@remix-run/react";
+import { Form, Link, redirect, useNavigation } from "@remix-run/react";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -9,10 +9,9 @@ import PasswordInput from "~/components/utils/PasswordInput";
 import { commitSession, getSession } from "~/sessions";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-
 import dotenv from "dotenv";
 import { db } from "~/db/db.server";
-import { ClipboardPen, KeyRound } from "lucide-react";
+import { ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -127,6 +126,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function Login() {
+    const nav = useNavigation();
+
     return (
         <div>
             <h1 className=" text-center text-4xl font-semibold my-8">Login</h1>
@@ -168,9 +169,17 @@ export default function Login() {
                         </div>
                     </CardContent>
                     <CardFooter className="grid">
-                        <Button className="w-full">
-                            <KeyRound className="mr-2" size="1.2rem" />
-                            Login
+                        <Button className="w-full" disabled={nav.state === "loading" || nav.state === "submitting"}>
+                            {
+                                (nav.state === "submitting" || nav.state === "loading") && nav.formAction === "/login"
+                                    ? <LoaderCircle className="animate-spin" />
+                                    : (
+                                        <>
+                                            <KeyRound className="mr-2" size="1.2rem" />
+                                            Login
+                                        </>
+                                    )
+                            }
                         </Button>
 
                         <div className="relative my-6">

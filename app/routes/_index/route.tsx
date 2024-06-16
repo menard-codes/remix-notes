@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form, json, redirect, useLoaderData } from "@remix-run/react";
+import { Form, json, redirect, useLoaderData, useNavigation } from "@remix-run/react";
 import type { Note } from "~/models/note.model";
 import { getSession } from "~/sessions";
 import jwt from "jsonwebtoken";
@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 import { db } from "~/db/db.server";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { FilePlus2, LogOut, NotebookPen, NotepadText, PackageOpen } from "lucide-react";
+import { FilePlus2, LoaderCircle, LogOut, NotebookPen, NotepadText, PackageOpen } from "lucide-react";
 import { Textarea } from "~/components/ui/textarea";
 import {
   Card,
@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "~/components/ui/alert-dialog";
+import { Skeleton } from "~/components/ui/skeleton";
 
 
 export const meta: MetaFunction = () => {
@@ -118,6 +119,11 @@ export default function Index() {
     },
   ];
   const user = useLoaderData<typeof loader>();
+  const nav = useNavigation();
+
+  if ((nav.state === "submitting" || nav.state === "loading") && nav.formAction === "/logout") {
+      return <LogOutLoader />
+  }
 
   return (
     <div className="p-2 pb-8 max-w-[1100px] mx-auto">
@@ -220,4 +226,15 @@ export default function Index() {
       </ul>
     </div>
   );
+}
+
+function LogOutLoader() {
+  return (
+      <div className="min-h-screen grid place-content-center justify-items-center gap-4">
+          <LoaderCircle size="3rem" className="animate-spin" />
+          <h1 className="text-3xl font-semibold">
+            Logging Out...
+          </h1>
+      </div>
+  )
 }
