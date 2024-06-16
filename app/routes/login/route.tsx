@@ -44,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs) {
         } });
         if (!user) {
             // TODO: This should be an error. handle later;
-            console.log('user doesn\'t exist. check the login credentials or create an account', username, password);
+            console.log('user doesn\'t exist. check the login credentials or create an account', usernameOrEmail, password);
             return null;
         }
         const isCorrectPassword = await bcrypt.compare(password, user?.hashedPassword as string);
