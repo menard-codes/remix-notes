@@ -1,15 +1,17 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form, json, redirect, useLoaderData, useNavigation } from "@remix-run/react";
 import type { Note } from "~/models/note.model";
-import { getSession } from "~/sessions";
-import jwt from "jsonwebtoken";
+
+// remix imports and other utils
+import { Form, useLoaderData, useNavigation } from "@remix-run/react";
+import { requireLogin } from "~/utils/auth.server";
+
+// components (custom and installed/3rd-party) and icons
 import NoteItem from "./NoteItem";
-import dotenv from "dotenv";
-import { db } from "~/db/db.server";
+import { LogOutLoader } from "~/components/utils/LogoutLoader";
+import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { FilePlus2, LoaderCircle, LogOut, NotebookPen, NotepadText, PackageOpen } from "lucide-react";
-import { Textarea } from "~/components/ui/textarea";
+import { FilePlus2, LogOut, NotebookPen, NotepadText, PackageOpen } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -28,7 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "~/components/ui/alert-dialog";
-import { Skeleton } from "~/components/ui/skeleton";
 
 
 export const meta: MetaFunction = () => {
@@ -39,51 +40,8 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  dotenv.config();
-  
-  const session = await getSession(request.headers.get("Cookie"));
-  
-  // check if jwt is already in the cookie and check if it is valid
-  // ----
-  // validate jwt
-  const token = session.get("jwt") as string;
-
-  if (!token) {
-    return redirect("/login");
-  }
-
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) {
-      // TODO: this should be an error
-      console.log('Error: jwtSecret cannot be retrieved from env');
-      return null;
-  }
-  try {
-      const decoded = jwt.verify(token, jwtSecret);
-      if (typeof decoded === "string") {
-          // TODO: this should be an error
-          console.log('invalid or expired token', decoded);
-          return null;
-      }
-      // check if the user with that id exists
-      const user = await db.users.findFirst({ where: { id: decoded.userId }, select: { username: true } });
-      if (!user) {
-          // TODO: This should be an error
-          console.log(`user with id ${decoded.userId} does not exist`);
-          return null;
-      }
-      // if all tests passed, just return null
-      return json(user);
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      return redirect("/login");
-    }
-
-    console.log('error....');
-    console.error(error);
-    return null;
-  }
-
+  // check the user if authenticated and redirects to login if not, otherwise, returns the authenticated user
+  return await requireLogin(request);
 }
 
 export default function Index() {
@@ -226,15 +184,4 @@ export default function Index() {
       </ul>
     </div>
   );
-}
-
-function LogOutLoader() {
-  return (
-      <div className="min-h-screen grid place-content-center justify-items-center gap-4">
-          <LoaderCircle size="3rem" className="animate-spin" />
-          <h1 className="text-3xl font-semibold">
-            Logging Out...
-          </h1>
-      </div>
-  )
 }

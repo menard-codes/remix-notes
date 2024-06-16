@@ -1,16 +1,19 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+
+// remix imports and other utils
 import { Form, Link, redirect, useNavigation } from "@remix-run/react";
+import bcrypt from "bcryptjs";
+import { db } from "~/db/db.server";
+import dotenv from "dotenv";
+import { ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
+import { checkIfAuthorizedAlready } from "~/utils/auth.server";
+
+// components imports
 import PasswordInput from "~/components/utils/PasswordInput";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { db } from "~/db/db.server";
-import { getSession } from "~/sessions";
-import dotenv from "dotenv";
-import { ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
 
 export const meta: MetaFunction = () => [
     { title: "Sign Up" },
@@ -18,50 +21,7 @@ export const meta: MetaFunction = () => [
 ]
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    dotenv.config();
-
-    const session = await getSession(request.headers.get("Cookie"));
-    
-    // check if jwt is already in the cookie and check if it is valid
-    if (session.has("jwt")) {
-
-        // ----
-        // validate jwt
-        const token = session.get("jwt") as string;
-        const jwtSecret = process.env.JWT_SECRET;
-        if (!jwtSecret) {
-            // TODO: this should be an error
-            console.log('Error: jwtSecret cannot be retrieved from env');
-            return null;
-        }
-        try {
-            const decoded = jwt.verify(token, jwtSecret);
-            if (typeof decoded === "string") {
-                // TODO: this should be an error
-                console.log('invalid or expired token');
-                return null;
-            }
-            // check if the user with that id exists
-            const user = await db.users.findFirst({ where: { id: decoded.userId } });
-            if (!user) {
-                // TODO: This should be an error
-                console.log(`user with id ${decoded.userId} does not exist`);
-                return null;
-            }
-            // if all tests passed, redirect to homepage
-            return redirect("/");
-            // -----
-        } catch (error) {
-            if (error instanceof jwt.TokenExpiredError) {
-                return null;
-            }
-
-            console.log('error....');
-            console.error(error);
-            return null;
-        }
-    }
-
+    await checkIfAuthorizedAlready(request);
     return null;
 }
 
