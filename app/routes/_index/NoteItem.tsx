@@ -1,3 +1,5 @@
+import { Notes } from "@prisma/client";
+import { useFetcher } from "@remix-run/react";
 import { Pencil, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -22,11 +24,11 @@ import {
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
-import type { Note } from "~/models/note.model";
-import { Form } from "@remix-run/react";
 
-export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit<Note, "authorId">) {
+
+export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit<Notes, "authorId">) {
     const [onEdit, setOnEdit] = useState(false);
+    const fetcher = useFetcher();
   
     return (
       <Card className="w-[350px] h-full">
@@ -38,7 +40,7 @@ export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit
                   <CardTitle>Edit Note</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Form method="PUT">
+                  <fetcher.Form method="PUT">
                     <div>
                       <Label htmlFor={`note-${id}-title`}>Title</Label>
                       <Input
@@ -64,7 +66,7 @@ export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit
                       </Button>
                       <Button type="button" variant="outline" onClick={() => setOnEdit(false)}>Cancel</Button>
                     </div>
-                  </Form>
+                  </fetcher.Form>
                 </CardContent>
               </>
             )
