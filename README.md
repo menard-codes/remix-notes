@@ -10,7 +10,7 @@ I also want to learn some related areas that I'm currently learning such as data
 
 The notes app is a note taking app that allows users to add a note, view their notes, edit a note, and delete a note.
 
-Users can create an account (via email/password, or Sign in with 3rd party providers such as Google, Facebook, etc.).
+Users can create an account (via email/password).
 
 ### Future improvements
 
@@ -20,7 +20,7 @@ In the future (that is, after the core features are implemented, I'm looking for
 
 I also intend to add Storybook and testing, like Jest in the future.
 
-Then, use Amazon Cognito for Auth. Replace the custom built I made.
+Then, use Amazon Cognito for Auth. Replace the custom built I made. Also add Sign in with 3rd party providers such as Google, Facebook, etc.
 
 ## Tech Stack
 
@@ -31,12 +31,9 @@ Then, use Amazon Cognito for Auth. Replace the custom built I made.
 
 ## TODO
 
-### Planning
-
-- [ ] Database Design
-- [ ] API Design
-- [ ] UI Architecture
-
-### Development
-
-*TBD*
+- [ ] Code cleaning and refactoring of core functionalities
+- [ ] Replace auth with Amazon Cognito
+- [ ] Add Storybook.js
+- [ ] Add testing
+- [ ] Host the database and the server
+- [ ] Set up CI/CD with GitHub Actions
