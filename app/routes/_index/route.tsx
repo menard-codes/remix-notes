@@ -92,6 +92,29 @@ export async function action({ request }: ActionFunctionArgs) {
         });
         return null;
       }
+      case "PUT": {
+        const noteTitle = formData.get('title');
+        const noteBody = formData.get('body');
+        const noteId = formData.get('noteId');
+        if (!noteTitle) {
+          return json({ error: 'Note title is required' });
+        }
+        if (!noteId) {
+          return json({ error: 'No note ID' });
+        }
+        console.log(formData)
+        await db.notes.update({
+          where: {
+            id: Number(noteId.toString())
+          },
+          data: {
+            title: noteTitle.toString(),
+            body: noteBody?.toString() || '',
+            updatedAt: new Date()
+          }
+        })
+        return null;
+      }
       case "DELETE": {
         const noteId = formData.get("noteId");
         if (noteId === null) {
@@ -99,7 +122,7 @@ export async function action({ request }: ActionFunctionArgs) {
         }
         await db.notes.delete({
           where: {
-            id: Number(noteId)
+            id: Number(noteId.toString())
           }
         });
         return null;
@@ -182,6 +205,7 @@ export default function Index() {
                     placeholder="Note title..."
                     id="new-note-title"
                     name="new-note-title"
+                    autoComplete="off"
                     required
                   />
                   <Textarea

@@ -1,7 +1,7 @@
 import { Notes } from "@prisma/client";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, Form } from "@remix-run/react";
 import { Pencil, Save, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +30,10 @@ export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit
     const [onEdit, setOnEdit] = useState(false);
     const fetcher = useFetcher();
 
+    useEffect(() => {
+      setOnEdit(false);
+    }, [updatedAt]);
+
     // TODO: Handle error state
     const handleDeleteNote = () => {
       fetcher.submit(
@@ -48,7 +52,8 @@ export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit
                   <CardTitle>Edit Note</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <fetcher.Form method="PUT">
+                  {/* TODO: Handle error */}
+                  <Form method="PUT">
                     <div>
                       <Label htmlFor={`note-${id}-title`}>Title</Label>
                       <Input
@@ -68,13 +73,13 @@ export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit
                       />
                     </div>
                     <div className="flex justify-between mt-2">
-                      <Button type="submit">
+                      <Button type="submit" name="noteId" value={id}>
                         <Save size="1.2rem" className="mr-2" />
                         Save
                       </Button>
                       <Button type="button" variant="outline" onClick={() => setOnEdit(false)}>Cancel</Button>
                     </div>
-                  </fetcher.Form>
+                  </Form>
                 </CardContent>
               </>
             )
@@ -113,12 +118,12 @@ export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit
                 <CardContent>
                   {body}
                   <em className="block mt-4 text-xs text-gray-500">
-                    Created at: {createdAt.toLocaleDateString()}
+                    Created at: {createdAt.toLocaleString()}
                   </em>
                   {
                     updatedAt && (
                       <em className="block text-xs text-gray-500">
-                        Updated at: {updatedAt.toLocaleDateString()}
+                        Updated at: {updatedAt.toLocaleString()}
                       </em>
                     )
                   }
