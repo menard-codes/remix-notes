@@ -47,7 +47,13 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
     const user = await checkAuthentication(request);
-    const notes = await db.notes.findMany();
+    const notes = await db.notes.findMany({
+      where: {
+        authorId: {
+          equals: user.id
+        }
+      }
+    });
     return json({ notes, user });
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError || error instanceof InvalidCredentialsError || error instanceof UnauthorizedError) {
