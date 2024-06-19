@@ -1,9 +1,9 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import type { Note } from "~/models/note.model";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 
 // remix imports and other utils
-import { Form, useLoaderData, useNavigation } from "@remix-run/react";
-import { requireLogin } from "~/utils/auth.server";
+import { Form, json, redirect, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
+import { checkAuthentication } from "~/utils/auth.server";
+import jwt from "jsonwebtoken";
 
 // components (custom and installed/3rd-party) and icons
 import NoteItem from "./NoteItem";
@@ -11,7 +11,7 @@ import { LogOutLoader } from "~/components/utils/LogoutLoader";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { FilePlus2, LogOut, NotebookPen, NotepadText, PackageOpen } from "lucide-react";
+import { AlertCircle, FilePlus2, LogOut, NotebookPen, NotepadText, PackageOpen } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -30,6 +30,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "~/components/ui/alert-dialog";
+import { db } from "~/db/db.server";
+import { InternalServerError, InvalidCredentialsError, UnauthorizedError } from "~/utils/errors.server";
+import { destroySession, getSession } from "~/sessions";
+import { useEffect, useRef } from "react";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 
 
 export const meta: MetaFunction = () => {
@@ -40,44 +45,69 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  // check the user if authenticated and redirects to login if not, otherwise, returns the authenticated user
-  return await requireLogin(request);
+  try {
+    const user = await checkAuthentication(request);
+    const notes = await db.notes.findMany();
+    return json({ notes, user });
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError || error instanceof InvalidCredentialsError || error instanceof UnauthorizedError) {
+      // Automatically redirect the user to login page whenever they encounter any of the above failing checks. destroy the existing cookies if there are
+      const session = await getSession(request.headers.get("Cookie"));
+      return redirect("/login", {
+        headers: {
+          "Set-Cookie": await destroySession(session)
+        }
+      });
+    } else {
+      throw new InternalServerError("Error 500 - Internal server error. Check the logs");
+    }
+  }
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  // TODO: Add require auth logic
+  try {
+    const formData = await request.formData();
+    const user = await checkAuthentication(request);
+  
+    switch (request.method) {
+      case "POST": {
+        const newNoteTitle = formData.get("new-note-title")?.toString();
+        const newNoteBody = formData.get("new-note-body")?.toString();
+        if (!newNoteTitle) {
+          return json({ error: 'Note title required' });
+        }
+        await db.notes.create({
+          data: {
+            title: newNoteTitle,
+            body: newNoteBody || "",
+            authorId: user.id
+          }
+        });
+        return null;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+
+  return null;
 }
 
 export default function Index() {
-  // NOTE: Dummy data, remove later
-  const notes: Note[] = [
-    {
-      id: 1,
-      title: 'To study',
-      body: 'gotta study fullstack dev',
-      authorId: 1000,
-      createdAt: new Date()
-    },
-    {
-      id: 2,
-      title: 'Goal',
-      body: 'To build a Shopify App as a side business',
-      authorId: 1000,
-      createdAt: new Date()
-    },
-    {
-      id: 3,
-      title: 'AWS',
-      body: 'Cloud is an essential skill that can boost my resume as a fullstack dev',
-      authorId: 1000,
-      createdAt: new Date()
-    },
-    {
-      id: 4,
-      title: 'Taxes',
-      body: 'gotta learn about personal finance, including taxes',
-      authorId: 1000,
-      createdAt: new Date()
-    },
-  ];
-  const user = useLoaderData<typeof loader>();
+  const { notes, user } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
   const nav = useNavigation();
+
+  // reset form when form submission is ok
+  const $form = useRef<HTMLFormElement>(null);
+  const navigation = useNavigation();
+  useEffect(() => {
+    if (navigation.state === "idle" && !actionData?.error) {
+      $form.current?.reset();
+    }
+  }, [navigation, actionData]);
 
   if ((nav.state === "submitting" || nav.state === "loading") && nav.formAction === "/logout") {
       return <LogOutLoader />
@@ -123,7 +153,7 @@ export default function Index() {
       </div>
 
       <div className="mt-14 max-w-3xl mx-auto">
-        <Form method="POST">
+        <Form method="POST" ref={$form}>
           <Card>
             <CardHeader>
               <CardTitle>Add new note</CardTitle>
@@ -142,6 +172,18 @@ export default function Index() {
                     id="new-note-body"
                   />
                 </div>
+                {
+                  actionData?.error
+                    ? (
+                      <Alert variant="destructive" className="mt-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>
+                          {actionData.error}
+                        </AlertDescription>
+                      </Alert>
+                    ) : ""
+                }
             </CardContent>
             <CardFooter>
               <Button type="submit" className="w-full">
@@ -168,7 +210,8 @@ export default function Index() {
                     id={note.id}
                     title={note.title}
                     body={note.body}
-                    createdAt={note.createdAt}
+                    createdAt={new Date(note.createdAt)}
+                    updatedAt={typeof note.updatedAt === "string" ? new Date(note.updatedAt) : null}
                   />
                 </li>
               ))
@@ -185,3 +228,13 @@ export default function Index() {
     </div>
   );
 }
+
+export function ErrorBoundary() {
+  return (
+      <div className="text-center min-h-screen grid place-content-center gap-2">
+          <h1 className="text-4xl">Error</h1>
+          <p>Check the logs</p>
+      </div>
+  )
+}
+

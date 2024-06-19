@@ -1,12 +1,12 @@
-import { destroySession, getSession } from "~/sessions";
+import { getSession } from "~/sessions";
 import { redirect } from "@remix-run/node";
 import { db } from "~/db/db.server";
-import { EnvLoadingError, InternalServerError, InvalidCredentialsError, UnauthorizedError } from "./errors.server";
+import { EnvLoadingError, InvalidCredentialsError, UnauthorizedError } from "./errors.server";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 
-async function checkAuthentication(request: Request) {
+export async function checkAuthentication(request: Request) {
       dotenv.config();
       const session = await getSession(request.headers.get("Cookie"));
 
@@ -36,25 +36,6 @@ async function checkAuthentication(request: Request) {
 
       // 4.) If all checks passed, return the user of the matching user in the record (only username and id)
       return user;
-}
-
-export async function requireLogin(request: Request) {
-  try {
-    const authenticatedUser = await checkAuthentication(request);
-    return authenticatedUser;
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError || error instanceof InvalidCredentialsError || error instanceof UnauthorizedError) {
-        // Automatically redirect the user to login page whenever they encounter any of the above failing checks. destroy the existing cookies if there are
-        const session = await getSession(request.headers.get("Cookie"));
-        return redirect("/login", {
-            headers: {
-                "Set-Cookie": await destroySession(session)
-            }
-        });
-    }
-
-    throw new InternalServerError("Error 500 - Internal server error. Check the logs");
-  }
 }
 
 export async function checkIfAuthorizedAlready(request: Request) {
