@@ -1,11 +1,11 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 
 // remix imports and other utils
-import { Form, Link, redirect, useNavigation } from "@remix-run/react";
+import { Form, Link, redirect, useActionData, useNavigation } from "@remix-run/react";
 import bcrypt from "bcryptjs";
 import { db } from "~/db/db.server";
 import dotenv from "dotenv";
-import { ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
+import { AlertCircle, ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
 import { checkIfAuthorizedAlready } from "~/utils/auth.server";
 
 // components imports
@@ -14,6 +14,8 @@ import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { json } from "@remix-run/node";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 
 export const meta: MetaFunction = () => [
     { title: "Sign Up" },
@@ -30,11 +32,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const formData = await request.formData();
     const requiredFields = ["email", "username", "password", "confirm-password"];
-    const hasAllRequired = requiredFields.every(required => Array.from(formData.keys()).includes(required))
+    const hasAllRequired = requiredFields.every(required => (
+        Array.from(formData.keys()).includes(required)
+        &&
+        formData.get(required)?.toString().length as number > 0
+    ));
     if (!hasAllRequired) {
-        // TODO: handle this route guard later
-        console.log('This should be an error')
-        return null;
+        return json({ error: "Username/Email and Password required" });
     }
 
     try {
@@ -44,9 +48,7 @@ export async function action({ request }: ActionFunctionArgs) {
             { email: formObject.email as string }
         ] } });
         if (user !== null) {
-            // TODO: Handle proper error for existing user
-            console.log('user already exists')
-            return null;
+            return json({ error: 'user already exists' });
         }
         const hashedPassword = await bcrypt.hash(formObject.password as string, 10);
         await db.users.create({ data: {
@@ -55,17 +57,16 @@ export async function action({ request }: ActionFunctionArgs) {
                 hashedPassword,
         }});
         
-        return redirect("/login")
+        return redirect("/login");
     } catch (error) {
-        // TODO: handle this error
-        console.log('got an error...');
         console.error(error);
-        return null;
+        throw error;
     }
 }
 
 export default function Signup() {
     const nav = useNavigation();
+    const actionData = useActionData<typeof action>();
 
     return (
         <div>
@@ -122,6 +123,18 @@ export default function Signup() {
                                 required={true} 
                             />
                         </div>
+                        {
+                            actionData?.error
+                                ? (
+                                    <Alert variant="destructive" className="mt-4">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>Error</AlertTitle>
+                                        <AlertDescription>
+                                            {actionData.error}
+                                        </AlertDescription>
+                                    </Alert>
+                                ) : ""
+                        }
                     </CardContent>
                     <CardFooter className="grid">
                         <Button className="w-full" disabled={nav.state === "loading" || nav.state === "submitting"}>
@@ -149,6 +162,15 @@ export default function Signup() {
                     </CardFooter>
                 </Card>
             </Form>
+        </div>
+    )
+}
+
+export function ErrorBoundary() {
+    return (
+        <div className="text-center min-h-screen grid place-content-center gap-2">
+            <h1 className="text-4xl">Error</h1>
+            <p>Check the logs</p>
         </div>
     )
 }
