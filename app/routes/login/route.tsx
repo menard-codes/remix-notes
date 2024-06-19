@@ -1,7 +1,8 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 
 // remix imports and other utils
-import { Form, Link, redirect, useNavigation } from "@remix-run/react";
+import { Form, Link, redirect, useActionData, useNavigation } from "@remix-run/react";
+import { json } from "@remix-run/node";
 import { commitSession, getSession } from "~/sessions";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -16,7 +17,8 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import PasswordInput from "~/components/utils/PasswordInput";
-import { ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
+import { AlertCircle, ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 
 export const meta: MetaFunction = () => {
   return [
@@ -30,11 +32,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const formData = await request.formData();
     const requiredFields = ["username-or-email", "password"];
-    const hasAllRequired = requiredFields.every(required => Array.from(formData.keys()).includes(required));
+    const hasAllRequired = requiredFields.every(required => (
+        Array.from(formData.keys()).includes(required)
+        &&
+        formData.get(required)?.toString().length as number > 0
+    ));
     if (!hasAllRequired) {
-        // TODO: handle this route guard later
-        console.log('This should be an error');
-        return null;
+        return json({ error: "Username/Email and Password required" });
     }
 
     try {
@@ -47,22 +51,17 @@ export async function action({ request }: ActionFunctionArgs) {
             ]
         } });
         if (!user) {
-            // TODO: This should be an error. handle later;
-            console.log('user doesn\'t exist. check the login credentials or create an account', usernameOrEmail, password);
-            return null;
+            return json({ error: `User "${usernameOrEmail}" doesn't exist. Check again the login credentials or create an account` });
         }
         const isCorrectPassword = await bcrypt.compare(password, user?.hashedPassword as string);
         if (!isCorrectPassword) {
-            // TODO: This should be an error. handle later
-            console.log('incorrect password', password);
-            return null;
+            return json({ error: 'incorrect password' });
         }
 
         const jwtSecret = process.env.JWT_SECRET;
         if (!jwtSecret) {
-            // TODO: Handle this error
-            console.log('Cannot load the jwtSecret from env');
-            return null;
+            console.error("Can't load the JWT secret from env");
+            return json({ error: 'Internal server error' }, { status: 500 });
         }
         const token = jwt.sign({ userId: user.id }, jwtSecret, {
             expiresIn: '1h'
@@ -75,19 +74,23 @@ export async function action({ request }: ActionFunctionArgs) {
             }
         })
     } catch (error) {
-        // TODO: Set an error
-        console.log('Error...');
         console.error(error);
-        return null;
+        throw error;
     }
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    return await checkIfAuthorizedAlready(request);
+    try {
+        return await checkIfAuthorizedAlready(request);
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
 }
 
 export default function Login() {
     const nav = useNavigation();
+    const actionData = useActionData<typeof action>();
 
     return (
         <div>
@@ -114,7 +117,7 @@ export default function Login() {
                                 id="delete"
                                 name="password"
                                 placeholder="Enter your password"
-                                required={true}
+                                required
                             />
 
                             <a href="/reset-password" className="block w-fit mt-2 text-sky-600 hover:underline underline-offset-2">Forgot your password?</a>
@@ -128,6 +131,18 @@ export default function Login() {
                                 Remember Me
                             </Label>
                         </div>
+                        {
+                            actionData?.error
+                                ? (
+                                    <Alert variant="destructive" className="mt-4">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>Error</AlertTitle>
+                                        <AlertDescription>
+                                            {actionData.error}
+                                        </AlertDescription>
+                                    </Alert>
+                                ) : ""
+                        }
                     </CardContent>
                     <CardFooter className="grid">
                         <Button className="w-full" disabled={nav.state === "loading" || nav.state === "submitting"}>
@@ -155,6 +170,15 @@ export default function Login() {
                     </CardFooter>
                 </Card>
             </Form>
+        </div>
+    )
+}
+
+export function ErrorBoundary() {
+    return (
+        <div className="text-center min-h-screen grid place-content-center gap-2">
+            <h1 className="text-4xl">Error</h1>
+            <p>Check the logs</p>
         </div>
     )
 }

@@ -46,7 +46,6 @@ export async function requireLogin(request: Request) {
     if (error instanceof jwt.TokenExpiredError || error instanceof InvalidCredentialsError || error instanceof UnauthorizedError) {
         // Automatically redirect the user to login page whenever they encounter any of the above failing checks. destroy the existing cookies if there are
         const session = await getSession(request.headers.get("Cookie"));
-        console.log('not auth')
         return redirect("/login", {
             headers: {
                 "Set-Cookie": await destroySession(session)
@@ -66,7 +65,7 @@ export async function checkIfAuthorizedAlready(request: Request) {
     }
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError || error instanceof InvalidCredentialsError || error instanceof UnauthorizedError) {
-      return redirect;
+      return null;
     }
   }
 }
