@@ -31,7 +31,10 @@ Then, use Amazon Cognito for Auth. Replace the custom built I made. Also add Sig
 
 ## TODO
 
+- [ ] Optimistic UI on deleting notes
+- [ ] Loading state on adding new and editing exiting notes
 - [ ] Code cleaning and refactoring of core functionalities
+- [ ] Remember Me on login
 - [ ] Replace auth with Amazon Cognito
 - [ ] Add Storybook.js
 - [ ] Add testing
