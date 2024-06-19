@@ -1,26 +1,85 @@
-import type { MetaFunction } from "@remix-run/node";
-import { Form, Link } from "@remix-run/react";
-import PasswordInput from "~/components/PasswordInput";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+
+// remix imports and other utils
+import { Form, Link, redirect, useActionData, useNavigation } from "@remix-run/react";
+import bcrypt from "bcryptjs";
+import { db } from "~/db/db.server";
+import dotenv from "dotenv";
+import { AlertCircle, ClipboardPen, KeyRound, LoaderCircle } from "lucide-react";
+import { checkIfAuthorizedAlready } from "~/utils/auth.server";
+
+// components imports
+import PasswordInput from "~/components/utils/PasswordInput";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { json } from "@remix-run/node";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 
 export const meta: MetaFunction = () => [
     { title: "Sign Up" },
     { name: "description", content: "Sign up to create an account for the Remix Notes App" }
 ]
 
+export async function loader({ request }: LoaderFunctionArgs) {
+    await checkIfAuthorizedAlready(request);
+    return null;
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+    dotenv.config();
+
+    const formData = await request.formData();
+    const requiredFields = ["email", "username", "password", "confirm-password"];
+    const hasAllRequired = requiredFields.every(required => (
+        Array.from(formData.keys()).includes(required)
+        &&
+        formData.get(required)?.toString().length as number > 0
+    ));
+    if (!hasAllRequired) {
+        return json({ error: "Username/Email and Password required" });
+    }
+
+    try {
+        const formObject = Object.fromEntries(formData);
+        const user = await db.users.findFirst({ where: { OR: [
+            { username: formObject.username as string },
+            { email: formObject.email as string }
+        ] } });
+        if (user !== null) {
+            return json({ error: 'user already exists' });
+        }
+        const hashedPassword = await bcrypt.hash(formObject.password as string, 10);
+        await db.users.create({ data: {
+                email: formObject.email as string,
+                username: formObject.username as string,
+                hashedPassword,
+        }});
+        
+        return redirect("/login");
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export default function Signup() {
+    const nav = useNavigation();
+    const actionData = useActionData<typeof action>();
+
     return (
         <div>
             <h1 className=" text-center text-4xl font-semibold my-8">Sign Up</h1>
-            <Form onSubmit={e => {
-                const form = new FormData(e.currentTarget);
-                if (form.get("password") !== form.get("confirm-password")) {
-                    e.preventDefault();
-                }
-            }}>
+            <Form
+                method="POST"
+                onSubmit={e => {
+                    const form = new FormData(e.currentTarget);
+                    if (form.get("password") !== form.get("confirm-password")) {
+                        e.preventDefault();
+                    }
+                }}
+            >
                 <Card className=" max-w-[720px] mx-auto">
                     <CardHeader>
                         <CardTitle>Remix Notes</CardTitle>
@@ -64,19 +123,54 @@ export default function Signup() {
                                 required={true} 
                             />
                         </div>
+                        {
+                            actionData?.error
+                                ? (
+                                    <Alert variant="destructive" className="mt-4">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>Error</AlertTitle>
+                                        <AlertDescription>
+                                            {actionData.error}
+                                        </AlertDescription>
+                                    </Alert>
+                                ) : ""
+                        }
                     </CardContent>
                     <CardFooter className="grid">
-                        <Button className="w-full">Sign Up</Button>
+                        <Button className="w-full" disabled={nav.state === "loading" || nav.state === "submitting"}>
+                            {
+                                (nav.state === "submitting" || nav.state === "loading") && nav.formAction === "/signup"
+                                    ? <LoaderCircle className="animate-spin" />
+                                    : (
+                                        <>
+                                            <ClipboardPen size="1.2rem" className="mr-2" />
+                                            Sign Up
+                                        </>
+                                    )
+                            }
+                        </Button>
 
                         <div className="relative my-6">
                             <hr className="absolute top-2/4 w-full" />
                             <p className="absolute top-2/4 translate-y-[-50%] left-0 right-0 m-auto w-fit bg-white px-2">or</p>
                         </div>
 
-                        <Link to="/login" className={buttonVariants({ variant: "secondary" })}>Log In Instead</Link>
+                        <Link to="/login" className={buttonVariants({ variant: "secondary" })}>
+                            <KeyRound className="mr-2" size="1.2rem" />
+                            Log In Instead
+                        </Link>
                     </CardFooter>
                 </Card>
             </Form>
+        </div>
+    )
+}
+
+export function ErrorBoundary() {
+    return (
+        <div className="text-center min-h-screen grid place-content-center gap-2">
+            <h1 className="text-4xl">Error</h1>
+            <p>Check the logs</p>
         </div>
     )
 }
