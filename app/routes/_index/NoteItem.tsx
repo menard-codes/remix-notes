@@ -29,6 +29,14 @@ import { Textarea } from "~/components/ui/textarea";
 export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit<Notes, "authorId">) {
     const [onEdit, setOnEdit] = useState(false);
     const fetcher = useFetcher();
+
+    // TODO: Handle error state
+    const handleDeleteNote = () => {
+      fetcher.submit(
+        { noteId: id },
+        { method: "DELETE" }
+      )
+    }
   
     return (
       <Card className="w-[350px] h-full">
@@ -91,7 +99,12 @@ export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction className=" bg-red-600">Delete</AlertDialogAction>
+                        <AlertDialogAction
+                          className=" bg-red-600"
+                          onClick={handleDeleteNote}
+                        >
+                          Delete
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -122,4 +135,3 @@ export default function NoteItem({ id, title, body, createdAt, updatedAt }: Omit
       </Card>
     )
   }
-  

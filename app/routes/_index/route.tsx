@@ -92,6 +92,18 @@ export async function action({ request }: ActionFunctionArgs) {
         });
         return null;
       }
+      case "DELETE": {
+        const noteId = formData.get("noteId");
+        if (noteId === null) {
+          return json({ error: "Note ID required to delete a note" });
+        }
+        await db.notes.delete({
+          where: {
+            id: Number(noteId)
+          }
+        });
+        return null;
+      }
     }
   } catch (error) {
     console.error(error);
